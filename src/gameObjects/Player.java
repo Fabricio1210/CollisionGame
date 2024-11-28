@@ -19,17 +19,35 @@ public class Player extends MovingObject{
 	private final double deltaAngle = 0.1;
 	private boolean accelerating = false;
 	private Chronometer fireRate;
+	
+	private boolean spawning, visible;
+	private Chronometer spawnTime, flickerTime;
 
 	public Player(Vector2D position, Vector2D velocity, double maxVel, BufferedImage texture, GameState gameState) {
 		super(position, velocity, maxVel, texture, gameState);
 		heading = new Vector2D(1,0);
 		acceleration = new Vector2D();
 		fireRate = new Chronometer();
+		spawnTime = new Chronometer();
+		flickerTime = new Chronometer();
 		}
 
 	@Override
 	public void update() {
-		if(KeyBoard.shoot && !fireRate.isRunning()) {
+		
+		if(!spawnTime.isRunning()) {
+			spawning = false;
+			visible = true;
+		}		
+		if(spawning) {			
+			if(!flickerTime.isRunning()) {				
+				flickerTime.run(Constants.FLICKER_TIME);
+				visible = !visible;			
+			}			
+		}
+		
+		if(KeyBoard.shoot && !fireRate.isRunning() && !spawning) {			
+			
 			double offsetX = 0;
 	        double offsetY = 0;
 
@@ -79,12 +97,39 @@ public class Player extends MovingObject{
 		if(position.getY() < 0) {
 		    position.setY(0);
 		}
+		
 		fireRate.update();
+		spawnTime.update();
+		flickerTime.update();
 		collidesWith();
+	}
+	
+	@Override
+	public void destroy() {
+		spawning = true;
+		spawnTime.run(Constants.SPAWNING_TIME);
+		if(!gameState.subtractLife()) {
+			gameState.gameOver();
+			super.destroy();
+		}
+		resetValues();
+		
+	}
+	
+	private void resetValues() {
+		
+		angle = 0;
+		velocity = new Vector2D();
+		position = new Vector2D(Constants.WIDTH/2 - Assets.player.getWidth()/2,
+				Constants.HEIGHT/2 - Assets.player.getHeight()/2);
 	}
 
 	@Override
 	public void draw(Graphics g) {
+		
+		if(!visible)
+			return;
+		
 		Graphics2D g2d = (Graphics2D)g;
 		at = AffineTransform.getTranslateInstance(position.getX(), position.getY());
 		at.rotate(angle, width/2, height/2);
@@ -94,9 +139,9 @@ public class Player extends MovingObject{
 		if(accelerating) {
 			g2d.drawImage(Assets.fire,at1,null);
 		}
-		g2d.drawImage(texture,at,null);
-		
-		
+		g2d.drawImage(texture,at,null);		
 	}
+	
+	public boolean isSpawning() {return spawning;}
 	
 }

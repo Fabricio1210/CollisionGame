@@ -16,6 +16,7 @@ public abstract class MovingObject extends GameObject{
 	protected int width;
 	protected int height;
 	protected GameState gameState;
+	protected boolean Dead;
 	
 	public MovingObject(Vector2D position,  Vector2D velocity, double maxVel, BufferedImage texture, GameState gameState) {
 		super(position, texture);
@@ -27,8 +28,8 @@ public abstract class MovingObject extends GameObject{
 		angle = 0;
 	}
 	
-	
-protected void collidesWith(){
+
+	protected void collidesWith(){
 		
 		ArrayList<MovingObject> movingObjects = gameState.getMovingObjects(); 
 		
@@ -41,32 +42,48 @@ protected void collidesWith(){
 			
 			double distance = m.getCenter().subtract(getCenter()).getMagnitude();
 			
-			if(distance < m.width/2 + width/2 && movingObjects.contains(this)){
+			if(distance < m.width/2 + width/2 && movingObjects.contains(this) && !m.Dead && !Dead){
 				objectCollision(m, this);
 			}
 		}
 	}
 	
-private void objectCollision(MovingObject a, MovingObject b) {
-    if (a instanceof Enemies && b instanceof Enemies) {
+	private void objectCollision(MovingObject a, MovingObject b) {
+    if ((a instanceof Enemies && b instanceof Enemies) || (a instanceof Shooter && b instanceof Enemies) || (a instanceof Enemies && b instanceof Shooter)) {
+        return;
+    }
+    if ((a instanceof EnemyBullets && b instanceof Enemies) || (a instanceof Enemies && b instanceof EnemyBullets)) {
+        return;
+    }
+    if ((a instanceof EnemyBullets && b instanceof Shooter) || (a instanceof Shooter && b instanceof EnemyBullets)) {
         return;
     }
     if ((a instanceof Bullets && b instanceof Player) || (a instanceof Player && b instanceof Bullets)) {
         return;
     }
-    //gameState.playExplosion(getCenter());
-    //a.destroy();
-    //b.destroy();
+    
+    if(a instanceof Player && ((Player)a).isSpawning()) {
+		return;
+	}
+	if(b instanceof Player && ((Player)b).isSpawning()) {
+		return;
+	}
+	
+    gameState.playExplosion(getCenter());
+    a.destroy();
+    b.destroy();
 }
 	
 	
 	protected void destroy(){
+		Dead = true;
 		gameState.getMovingObjects().remove(this);
 	}
 	
 	protected Vector2D getCenter(){
 		return new Vector2D(position.getX() + width/2, position.getY() + height/2);
 	}
-
+	
+	public boolean isDead() {return Dead;}
 
 }

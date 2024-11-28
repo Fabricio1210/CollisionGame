@@ -7,7 +7,7 @@ public class Chronometer {
 	
 	public Chronometer() {
 		delta = 0;
-		lastTime = 0;
+		lastTime = System.currentTimeMillis();
 		running = false;
 	}
 	
@@ -16,19 +16,19 @@ public class Chronometer {
 		this.time = time;
 	}
 	
-	public void update() {
-		if(running) {
+	public void update() {	
+		if(running)
 			delta += System.currentTimeMillis() - lastTime;
-		}
-		if(delta >= time) {
+		if(delta >= time){
 			running = false;
 			delta = 0;
 		}
 		
-		lastTime= System.currentTimeMillis();
+		lastTime = System.currentTimeMillis();
 	}
 	
 	public boolean isRunning() {
 		return running;
 	}
+	
 }

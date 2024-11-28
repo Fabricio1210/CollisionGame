@@ -3,7 +3,11 @@ import javax.swing.JFrame;
 
 import graphics.Assets;
 import input.KeyBoard;
+import input.MouseInput;
 import states.GameState;
+import states.LoadingState;
+import states.MenuState;
+import states.State;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
@@ -23,8 +27,9 @@ public class Window extends JFrame implements Runnable{
 	private double delta = 0;
 	private int averageFPS = FPS;
 	
-	private GameState gameState;
+	//private GameState gameState;
 	private KeyBoard keyBoard;
+	private MouseInput mouseInput;
 	
 	public Window() {
 		setTitle("Collision Game");
@@ -36,11 +41,17 @@ public class Window extends JFrame implements Runnable{
 		
 		canvas = new Canvas();
 		keyBoard = new KeyBoard();
+		mouseInput = new MouseInput();
 		
 		canvas.setPreferredSize(new Dimension(width, height));
 		canvas.setMaximumSize(new Dimension(width, height));
 		canvas.setMinimumSize(new Dimension(width, height));
 		canvas.setFocusable(true);
+		
+		add(canvas);
+		canvas.addKeyListener(keyBoard);
+		canvas.addMouseListener(mouseInput);
+		canvas.addMouseMotionListener(mouseInput);
 		
 		add(canvas);
 		canvas.addKeyListener(keyBoard);
@@ -52,13 +63,14 @@ public class Window extends JFrame implements Runnable{
 	
 	public static void main(String[] args) {
 		new Window().start();
-
+		
 	}
 	
 	int x=0;
 	private void update() {
 		keyBoard.update();
-		gameState.update();
+		//gameState.update();
+		State.getCurrentState().update();
 	}
 	
 	private void draw() {
@@ -71,8 +83,8 @@ public class Window extends JFrame implements Runnable{
 		//------------------------------------
 		g.setColor(Color.black);
 		g.fillRect(0, 0, width, height);
-		
-		gameState.draw(g);
+		State.getCurrentState().draw(g);
+		//gameState.draw(g);
 		
 		g.drawString("" + averageFPS, 10, 10);
 		
@@ -82,8 +94,15 @@ public class Window extends JFrame implements Runnable{
 	}
 	
 	private void init() {
-		Assets.init();
-		gameState = new GameState();
+		
+		Thread loadingThread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				Assets.init();
+			}
+		});	
+		State.changeState(new LoadingState(loadingThread));
 	}
 	
 	@Override

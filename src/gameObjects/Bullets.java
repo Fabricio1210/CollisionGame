@@ -5,13 +5,11 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-import main.Window;
 import math.Vector2D;
 import states.GameState;
 
 public class Bullets extends MovingObject{
 
-	
 	public Bullets(Vector2D position, Vector2D velocity, double maxVel, double angle, BufferedImage texture, GameState gameState) {
 		super(position, velocity, maxVel, texture, gameState);
 		this.angle = angle;
@@ -21,25 +19,30 @@ public class Bullets extends MovingObject{
 	@Override
 	public void update() {
 		position = position.add(velocity);
-		if(position.getX() < 0 || position.getX() > Window.width || position.getY() < 0 || position.getY() > Window.height) {
+		if(position.getX() < 0 || position.getX() > Constants.WIDTH ||
+				position.getY() < 0 || position.getY() > Constants.HEIGHT){
 			destroy();
 		}
 		
 		collidesWith();
+		
 	}
 
 	@Override
 	public void draw(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
-		at = AffineTransform.getTranslateInstance(position.getX(), position.getY());
-		at.rotate(angle);
-		g2d.drawImage(texture,at,null);
+		
+		at = AffineTransform.getTranslateInstance(position.getX() - width/2, position.getY());
+		
+		at.rotate(angle, width/2, 0);
+		
+		g2d.drawImage(texture, at, null);
+		
 	}
 	
 	@Override
-	public Vector2D getCenter() {
-		return new Vector2D(position.getX()+ width/2,position.getY() + width/2);
+	public Vector2D getCenter(){
+		return new Vector2D(position.getX() + width/2, position.getY() + width/2);
 	}
 	
-
 }
